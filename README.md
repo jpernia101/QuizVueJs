@@ -1,4 +1,5 @@
-# quiz
+# A small Quiz application developed in Vue.js.
+Test your random knowledge with 10 random questions and see how many right you can get.
 
 ## Project setup
 ```
