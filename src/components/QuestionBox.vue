@@ -1,26 +1,131 @@
 <template>
   <div>
-		<b-jumbotron>
+		<b-jumbotron >
 			<template v-slot:lead>
-				{{currentQuestion.question}}
+				<span >{{currentQuestion.question}}</span>
 			</template>
 
 			<hr class="my-4">
-
-			<p>
-				answer choices
-			</p>
-
-			<b-button variant="primary" href="#">Do Something</b-button>
-			<b-button variant="success" href="#">Do Something Else</b-button>
+			<b-list-group>
+				<b-list-group-item 
+					v-for="(answer,index) in answers" 
+					:key="index" 
+					@click="selectedAnswer(index)" 
+					:class="answerClass(index)"
+				>
+					{{answer}}
+				</b-list-group-item>
+			</b-list-group>
+			<b-button variant="primary" 
+					@click="submitAnswer"
+					:disabled="selectedIndex === null || answered"
+			>	Submit
+			</b-button>
+			<b-button 
+					@click.prevent='next' 
+					variant="success" 
+					href="#">Next</b-button>
 		</b-jumbotron>
 	</div>
+
 </template>
 
 <script>
+import _ from 'lodash'
+
 export default {
 	props:{
-		currentQuestion: Object
+		currentQuestion: Object,
+		next: Function,
+		increment: Function,
+	
 	}, 
+	data(){
+		return{
+			selectedIndex: null,
+			correctIndex:null,
+			shuffledAnswers: [],
+			answered:false
+		}
+	},
+	watch:{
+		currentQuestion:{
+			immediate:true,
+			handler(){
+				this.selectedIndex = null
+				this.answered= false
+				this.shuffleAnswers()
+			}
+
+		}
+	},
+	computed:{
+		answers: function() {
+	let answersChoices = [...this.currentQuestion.incorrect_answers]
+			answersChoices.push(this.currentQuestion.correct_answer)
+			return answersChoices
+		}
+	},
+	methods:{
+		selectedAnswer: function(index){
+			this.selectedIndex = index
+		},
+		shuffleAnswers: function(){
+			let answers = [...this.currentQuestion.incorrect_answers, this.currentQuestion.correct_answer]
+			this.shuffledAnswers = _.shuffle(answers)
+			this.correctIndex = this.shuffledAnswers.indexOf(this.currentQuestion.correct_answer)
+		},
+		submitAnswer: function(){
+			let isCorrect = false
+			if(this.selectedIndex === this.correctIndex){
+				isCorrect = true
+			}
+			this.answered = true
+			this.increment(isCorrect)
+			
+		},
+		answerClass: function(index){
+			let answerClass = ''
+			if(!this.answered && this.selectedIndex === index){
+				answerClass = 'selected'
+			}else if( this.answered && this.correctIndex === index){
+				answerClass = 'correct'
+			}else if(this.answered && this.selectedIndex === index && this.correctIndex !== index){
+				answerClass= 'incorrect'
+			}
+			return answerClass
+		}
+	},
+	mounted: function(){
+		console.log(this.currentQuestion)
+		
+	}
 }
 </script>
+
+<style scoped>
+
+.list-group{
+	margin-bottom: 20px;
+}
+
+.list-group-item:hover{
+	background: #EEE;
+	cursor: pointer;
+}
+
+.selected {
+	background-color: lightblue;
+}
+.correct{
+	background-color: lightgreen;
+}
+.incorrect {
+	background-color: red;
+}
+.btn{
+	margin: 0 5px;
+}
+
+</style>
+
